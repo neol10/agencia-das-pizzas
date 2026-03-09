@@ -81,14 +81,9 @@ async function fetchAllData(isSilent = false) {
         localCoupons = coupons.data || [];
         globalSettings = settingsData.data || { is_open: true, schedule: {} };
 
-        // Notificação de Novo Pedido (Somente após o load inicial e se houver pedido pendente/novo)
-        if (!isInitialLoad && localOrders.length > lastOrderCount) {
-            const audio = document.getElementById('order-sound');
-            if (audio) {
-                audio.play().catch(e => console.log("Áudio bloqueado pelo navegador", e));
-            }
-        }
+        // Sincroniza contagem de pedidos
         lastOrderCount = localOrders.length;
+        isInitialLoad = false;
         isInitialLoad = false;
 
         renderAll();

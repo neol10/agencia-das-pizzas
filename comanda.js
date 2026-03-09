@@ -22,6 +22,8 @@ function getAudioCtx() {
 
 let isSoundEnabled = true;
 let kdsOrders = [];
+let lastOrderCount = 0; // Para redundância de som
+let isInitialLoad = true;
 let realtimeSubscription = null;
 let realtimeHeartbeat = null;
 
@@ -146,21 +148,34 @@ function playNotification(isTest = false) {
         });
     }
 
-    // B. Alerta Sonoro
+    // B. Alerta Sonoro: SINO DE OURO 🔔
     try {
         const ctx = getAudioCtx();
-        // Toca 2 beeps seguidos
-        [0, 0.25].forEach(delay => {
+        const now = ctx.currentTime;
+
+        // Harmônicos do Sino: Fundamental + Brilho
+        const freqs = [523.25, 1046.50, 1567.98, 2093.00]; // Dó5, Dó6, Sol6, Dó7
+
+        freqs.forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
+
+            osc.type = 'triangle'; // Som mais rico que sine, mais suave que sawtooth
+            osc.frequency.value = f;
+
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.value = 880;
-            gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
-            osc.start(ctx.currentTime + delay);
-            osc.stop(ctx.currentTime + delay + 0.3);
+
+            // Envelope do Sino: Ataque instantâneo e decaimento longo
+            const volume = i === 0 ? 0.4 : 0.2 / i; // Fundamental mais alta
+            const duration = 1.5 - (i * 0.2); // Harmônicos agudos somem mais rápido
+
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            osc.start(now);
+            osc.stop(now + duration);
         });
     } catch (e) {
         console.log('Áudio não disponível:', e);
@@ -189,6 +204,14 @@ async function fetchActiveOrders() {
     }
 
     kdsOrders = data || [];
+
+    // Redundância: Toca som se houver novo pedido detectado via polling (caso realtime falhe)
+    if (!isInitialLoad && kdsOrders.filter(o => o.status === 'pendente').length > lastOrderCount) {
+        playNotification();
+    }
+    lastOrderCount = kdsOrders.filter(o => o.status === 'pendente').length;
+    isInitialLoad = false;
+
     renderLanes();
 }
 
@@ -482,6 +505,11 @@ function subscribeToRealtime() {
             subscribeToRealtime();
         }
     }, 30 * 60 * 1000);
+
+    // Polling redundante a cada 15 segundos para garantir que nenhum pedido fuja sem som
+    setInterval(() => {
+        if (dbClient) fetchActiveOrders();
+    }, 15000);
 }
 
 function updateTimeCounters() {
