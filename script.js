@@ -859,7 +859,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnSaveProfile) {
         btnSaveProfile.addEventListener('click', async () => {
             const name = inputName.value.trim();
-            const phone = inputPhone.value.trim();
+            const rawPhone = inputPhone.value.trim();
+            const phone = rawPhone.replace(/\D/g, ''); // Normaliza para salvar no banco
             const address = inputAddress.value.trim();
 
             if (!name || !phone) {
@@ -874,17 +875,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 email: null // reservado para expansão
             };
 
-            // Backup local instantâneo
+            // Backup local instantâneo (mantém o original para o input)
             localStorage.setItem('agenciaPizzas_Profile', JSON.stringify({
                 name: name,
-                phone: phone,
+                phone: rawPhone,
                 address: address
             }));
 
             // Sync Supabase (REI NEO Tracker)
             if (supabase) {
                 try {
-                    // Busca se já existe pelo telefone
+                    // Busca se já existe pelo telefone normalizado
                     const { data: existing, error: findError } = await supabase
                         .from('customers')
                         .select('id')
@@ -919,7 +920,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         historyContainer.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="ph ph-spinner ph-spin" style="font-size:2rem; color:var(--primary-red);"></i><p>Carregando histórico...</p></div>';
 
         const profile = JSON.parse(localStorage.getItem('agenciaPizzas_Profile')) || {};
-        const phone = profile.phone;
+        const phone = (profile.phone || '').replace(/\D/g, ''); // Normaliza para busca
 
         let dbOrders = [];
         if (supabase && phone) {
@@ -1087,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Busca os dados do perfil atualizados
             const profile = JSON.parse(localStorage.getItem('agenciaPizzas_Profile')) || {};
+            const clientPhone = (profile.phone || '').replace(/\D/g, '');
             const nomeCliente = profile.name ? `\n👤 *Cliente:* ${profile.name}` : "";
             const enderecoCliente = profile.address ? `\n📍 *Endereço de Entrega:* ${profile.address}` : "\n⚠️ *Endereço não informado*";
 
@@ -1109,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let orderShortId = '0000';
             if (supabase) {
                 try {
-                    const { data: customer } = await supabase.from('customers').select('id').eq('phone', profile.phone).maybeSingle();
+                    const { data: customer } = await supabase.from('customers').select('id').eq('phone', clientPhone).maybeSingle();
 
                     const payloadItems = cart.map(item => ({ ...item }));
                     if (activeCoupon) {
@@ -1123,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         customer_id: customer ? customer.id : null,
                         total_price: totalPedido,
                         items: JSON.stringify(payloadItems),
-                        customer_details: JSON.stringify(profile),
+                        customer_details: JSON.stringify({ ...profile, phone: clientPhone }),
                         status: 'pendente',
                         delivery_type: deliveryType,
                         delivery_fee: deliveryFee
