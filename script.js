@@ -820,6 +820,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileBtn.addEventListener('click', () => {
             profileModal.classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // Limpa o badge ao abrir o perfil
+            const pBadge = document.getElementById('profile-badge');
+            if (pBadge) {
+                pBadge.style.display = 'none';
+                pBadge.classList.remove('pulse');
+            }
+
             loadProfileData();
             renderOrderHistory();
         });
@@ -1306,6 +1314,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             let actives = JSON.parse(localStorage.getItem('agenciaPizzas_ActiveOrders')) || [];
             actives = actives.filter(id => id !== order.id);
             localStorage.setItem('agenciaPizzas_ActiveOrders', JSON.stringify(actives));
+        }
+
+        // 1. Mostra o badge no ícone do perfil se o modal estiver fechado
+        const profileModal = document.getElementById('profile-modal');
+        const pBadge = document.getElementById('profile-badge');
+        if (profileModal && !profileModal.classList.contains('active') && pBadge) {
+            pBadge.style.display = 'block';
+            pBadge.classList.add('pulse');
+        }
+
+        // 2. Se o modal de histórico estiver aberto, recarrega a lista na hora
+        if (profileModal && profileModal.classList.contains('active')) {
+            renderOrderHistory();
         }
 
         if (!msg) return;

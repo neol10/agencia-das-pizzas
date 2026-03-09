@@ -65,10 +65,13 @@
 
             <div class="kds-controls">
                 <!-- Tempo Real Status -->
-                <div class="realtime-status">
-                    <span class="pulse-dot"></span> Ao Vivo
+                <div class="realtime-status" id="realtime-status-container">
+                    <span class="pulse-dot" id="realtime-dot"></span> <span id="realtime-text">Conectando...</span>
                 </div>
 
+                <button id="btn-test-sound" class="btn-icon tooltip" title="Testar Som e Notificação">
+                    <i class="ph ph-megaphone"></i>
+                </button>
                 <button id="btn-sound" class="btn-icon tooltip" title="Ligar/Desligar Som">
                     <i id="icon-sound" class="ph-fill ph-bell-ringing"></i>
                 </button>

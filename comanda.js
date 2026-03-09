@@ -13,6 +13,10 @@ const btnLogout = document.getElementById('btn-logout');
 const btnFullscreen = document.getElementById('btn-fullscreen');
 const btnSound = document.getElementById('btn-sound');
 const iconSound = document.getElementById('icon-sound');
+const btnTestSound = document.getElementById('btn-test-sound');
+const realtimeDot = document.getElementById('realtime-dot');
+const realtimeText = document.getElementById('realtime-text');
+const realtimeContainer = document.getElementById('realtime-status-container');
 // Som gerado via Web Audio API (sem arquivo externo)
 let audioCtx = null;
 function getAudioCtx() {
@@ -135,6 +139,15 @@ btnSound.addEventListener('click', async () => {
         iconSound.className = 'ph ph-bell-slash';
         iconSound.style.color = '#ef4444';
     }
+});
+
+btnTestSound.addEventListener('click', () => {
+    // Toca o sino e mostra flash para teste
+    playNotification(true);
+    document.body.classList.add('kds-flash');
+    setTimeout(() => {
+        document.body.classList.remove('kds-flash');
+    }, 2400);
 });
 
 function playNotification(isTest = false) {
@@ -494,6 +507,7 @@ function subscribeToRealtime() {
         )
         .subscribe((status) => {
             console.log("Status Realtime:", status);
+            updateRealtimeUI(status);
         });
 
     // Heartbeat: checa a cada 30 min se deslogou sozinho e re-inscreve
@@ -510,6 +524,30 @@ function subscribeToRealtime() {
     setInterval(() => {
         if (dbClient) fetchActiveOrders();
     }, 15000);
+}
+
+function updateRealtimeUI(status) {
+    if (!realtimeDot || !realtimeText) return;
+
+    if (status === 'SUBSCRIBED') {
+        realtimeDot.style.backgroundColor = '#10b981'; // Verde
+        realtimeDot.classList.add('pulse-dot');
+        realtimeText.textContent = 'Ao Vivo';
+        realtimeText.style.color = '#10b981';
+    } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
+        realtimeDot.style.backgroundColor = '#ef4444'; // Vermelho
+        realtimeDot.classList.remove('pulse-dot');
+        realtimeText.textContent = 'Reconectando...';
+        realtimeText.style.color = '#ef4444';
+
+        // Tenta re-inscrever em caso de erro
+        setTimeout(subscribeToRealtime, 5000);
+    } else {
+        realtimeDot.style.backgroundColor = '#f59e0b'; // Laranja
+        realtimeDot.classList.remove('pulse-dot');
+        realtimeText.textContent = 'Conectando...';
+        realtimeText.style.color = '#f59e0b';
+    }
 }
 
 function updateTimeCounters() {
