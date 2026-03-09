@@ -102,19 +102,51 @@ btnFullscreen.addEventListener('click', () => {
     }
 });
 
-btnSound.addEventListener('click', () => {
+btnSound.addEventListener('click', async () => {
+    // 1. Tenta reforçar a permissão de notificações nativas
+    if ("Notification" in window) {
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        } else if (Notification.permission === 'denied') {
+            alert("⚠️ Notificações Bloqueadas!\n\nPara receber alertas de novos pedidos, clique no cadeado ao lado da URL e mude 'Notificações' para 'Permitir'.");
+        }
+    }
+
+    // 2. Reforça OneSignal se disponível
+    if (window.OneSignalDeferred) {
+        OneSignalDeferred.push(async function (OneSignal) {
+            const isPushSupported = OneSignal.Notifications.isPushSupported();
+            if (isPushSupported) {
+                await OneSignal.Notifications.requestPermission();
+            }
+        });
+    }
+
+    // 3. Toggle do som (função original)
     isSoundEnabled = !isSoundEnabled;
     if (isSoundEnabled) {
         iconSound.className = 'ph-fill ph-bell-ringing';
         iconSound.style.color = '';
+        // Teste de som rápido para confirmar
+        playNotification(true);
     } else {
         iconSound.className = 'ph ph-bell-slash';
         iconSound.style.color = '#ef4444';
     }
 });
 
-function playNotification() {
-    if (!isSoundEnabled) return;
+function playNotification(isTest = false) {
+    if (!isSoundEnabled && !isTest) return;
+
+    // A. Notificação Nativa (Browser)
+    if ("Notification" in window && Notification.permission === "granted" && !isTest) {
+        new Notification("🍕 Novo Pedido Chegou!", {
+            body: "Verifique o painel da cozinha agora.",
+            icon: "logo%20pizza.jpg"
+        });
+    }
+
+    // B. Alerta Sonoro
     try {
         const ctx = getAudioCtx();
         // Toca 2 beeps seguidos
@@ -134,11 +166,13 @@ function playNotification() {
         console.log('Áudio não disponível:', e);
     }
 
-    // Flash visual na tela
-    document.body.classList.add('kds-flash');
-    setTimeout(() => {
-        document.body.classList.remove('kds-flash');
-    }, 2400); // 3 piscadas de 0.8s = 2.4s
+    // C. Flash visual na tela
+    if (!isTest) {
+        document.body.classList.add('kds-flash');
+        setTimeout(() => {
+            document.body.classList.remove('kds-flash');
+        }, 2400); // 3 piscadas de 0.8s = 2.4s
+    }
 }
 
 // BUSCA E RENDERIZAÇÃO DE PEDIDOS

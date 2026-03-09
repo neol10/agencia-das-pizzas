@@ -47,21 +47,13 @@ function initTabs() {
     adminTabContents = document.querySelectorAll('.admin-tab-content');
 
     adminTabs.forEach(tab => {
-        // Remove clonando para evitar duplicação de eventos se initTabs for chamado de novo
-        const newTab = tab.cloneNode(true);
-        tab.parentNode.replaceChild(newTab, tab);
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
 
-        newTab.addEventListener('click', () => {
-            const target = newTab.dataset.tab;
+            adminTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
 
-            // Re-fetch no click para garantir os nós atuais
-            const currentTabs = document.querySelectorAll('.admin-tab');
-            const currentContents = document.querySelectorAll('.admin-tab-content');
-
-            currentTabs.forEach(t => t.classList.remove('active'));
-            newTab.classList.add('active');
-
-            currentContents.forEach(content => {
+            adminTabContents.forEach(content => {
                 content.classList.remove('active');
                 if (content.id === target) content.classList.add('active');
             });
