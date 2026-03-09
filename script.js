@@ -1358,4 +1358,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 5000);
 
+    // 6. GUIA DE INSTALAÇÃO iOS
+    const checkIOSInstall = () => {
+        // Detecta se é iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        // Detecta se NÃO está em modo standalone (ou seja, está no navegador)
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+        if (isIOS && !isStandalone) {
+            const lastDismissed = localStorage.getItem('agenciaPizzas_iOSGuideDismissed');
+            const now = Date.now();
+
+            // Só mostra se nunca fechou ou se fechou há mais de 7 dias
+            if (!lastDismissed || (now - lastDismissed) > (7 * 24 * 60 * 60 * 1000)) {
+                const iosModal = document.getElementById('ios-install-guide');
+                const closeBtn = document.getElementById('close-ios-guide');
+
+                if (iosModal) {
+                    setTimeout(() => {
+                        iosModal.style.display = 'block';
+                    }, 3000); // 3 segundos após carregar
+
+                    closeBtn?.addEventListener('click', () => {
+                        iosModal.style.display = 'none';
+                        localStorage.setItem('agenciaPizzas_iOSGuideDismissed', Date.now());
+                    });
+                }
+            }
+        }
+    };
+
+    checkIOSInstall();
+
 });
+
