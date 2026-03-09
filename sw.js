@@ -1,8 +1,8 @@
 const CACHE_NAME = 'neo-cache-v7';
 const ASSETS_TO_CACHE = [
-    './index.html',
-    './admin.html',
-    './comanda.html',
+    './',
+    '/admin',
+    '/comanda',
     './styles.css',
     './comanda.css',
     './script.js',
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
                     // Fallback se estiver offline
                     // Se for navegação de HTML, retorna o index
                     if (event.request.mode === 'navigate') {
-                        return caches.match('./index.html');
+                        return caches.match('./');
                     }
                 });
             })

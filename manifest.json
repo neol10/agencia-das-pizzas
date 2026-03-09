@@ -2,7 +2,7 @@
     "name": "Agência das Pizzas",
     "short_name": "AgênciaPizzas",
     "description": "Peça suas pizzas e calzones com a melhor qualidade e rapidez da região.",
-    "start_url": "./index.html",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#0f121b",
     "theme_color": "#ef4444",
