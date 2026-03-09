@@ -18,6 +18,17 @@ let globalSettings = null;
 let lastOrderCount = 0; // Para notificação de áudio
 let isInitialLoad = true;
 
+// Helper para evitar XSS (Injeção de Script malicioso através de nomes/endereços)
+function esc(t) {
+    if (!t) return "";
+    return t.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function initAdmin() {
     if (!dbClient && window.supabase) {
         dbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -127,8 +138,8 @@ function renderProducts() {
             item.className = 'admin-product-item';
             item.innerHTML = `
                 <div class="admin-product-info">
-                    <h4>${p.name}</h4>
-                    <p>${p.description || ''}</p>
+                    <h4>${esc(p.name)}</h4>
+                    <p>${esc(p.description || '')}</p>
                 </div>
                 <div class="admin-product-price">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                 <div class="admin-product-actions">
@@ -282,7 +293,7 @@ function renderCategories() {
         const item = document.createElement('div');
         item.className = 'admin-list-item';
         item.innerHTML = `
-            <span><strong>${c.name}</strong> (Ordem: ${c.order_index})</span>
+            <span><strong>${esc(c.name)}</strong> (Ordem: ${c.order_index})</span>
             <div class="admin-product-actions">
                 <button class="btn-edit-item" onclick="openCategoryModal('${c.id}')">Editar</button>
                 <button class="btn-edit-item" style="background:#ef4444;" onclick="deleteCategory('${c.id}')">Excluir</button>
@@ -362,7 +373,7 @@ function renderOrders() {
                     ${deliveryBadge}
                 </div>
                 <p style="font-size:0.8rem; margin:4px 0;">${date} - <strong>R$ ${o.total_price.toFixed(2)}</strong></p>
-                <div class="order-items-summary">${(JSON.parse(o.items || '[]')).filter(i => !i.name.includes('Desconto')).map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+                <div class="order-items-summary">${(JSON.parse(o.items || '[]')).filter(i => !i.name.includes('Desconto')).map(i => `${i.quantity}x ${esc(i.name)}`).join(', ')}</div>
             </div>
             <select onchange="updateOrderStatus('${o.id}', this.value)" class="profile-input" style="width:130px; padding:5px;">
                 <option value="pendente" ${o.status === 'pendente' ? 'selected' : ''}>Pendente</option>
@@ -383,9 +394,9 @@ function renderCustomers() {
         item.className = 'admin-list-item';
         item.innerHTML = `
             <div>
-                <strong>${c.full_name || 'Anônimo'}</strong>
-                <p style="font-size:0.8rem;">${c.phone || ''} | ${c.email || ''}</p>
-                <p style="font-size:0.7rem; color:var(--text-muted); white-space:pre-wrap;">${c.address || 'Sem endereço'}</p>
+                <strong>${esc(c.full_name || 'Anônimo')}</strong>
+                <p style="font-size:0.8rem;">${esc(c.phone || '')} | ${esc(c.email || '')}</p>
+                <p style="font-size:0.7rem; color:var(--text-muted); white-space:pre-wrap;">${esc(c.address || 'Sem endereço')}</p>
             </div>
         `;
         container.appendChild(item);

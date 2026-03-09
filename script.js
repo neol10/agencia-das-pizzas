@@ -6,6 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiem5oZWF4dm9mZmNsY2dxcm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MzE3ODUsImV4cCI6MjA4ODUwNzc4NX0.9Zwi4QTORguSHV4feMoZbr953irktkCnDrY0AHQEaa0';
     const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
+    // Helper para evitar XSS (Injeção de Script)
+    function esc(t) {
+        if (!t) return "";
+        return t.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     // 0. VARIÁVEL GLOBAL
     let estaAberto = true;
     // 1 & 2 & 3 Serão reinicializados pelo Supabase APÓS o carregamento da DOM Dinâmica
@@ -775,21 +786,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (val.length === 11 && supabase) {
                 try {
                     const formattedPhone = e.target.value.trim();
-                    // Tenta com o telefone formatado e também com dígitos puros
-                    let { data, error } = await supabase.from('customers').select('*').eq('phone', formattedPhone).maybeSingle();
-                    if (!data) {
-                        // Tentativa 2: telefone sem formatação (somente dígitos)
-                        ({ data, error } = await supabase.from('customers').select('*').eq('phone', val).maybeSingle());
-                    }
-                    if (data) {
-                        if (data.full_name) inputName.value = data.full_name;
-                        if (data.address) inputAddress.value = data.address;
+                    // Busca segura via RPC (Bloqueamos o SELECT direto na tabela customers por segurança)
+                    const { data: customer, error: rpcErr } = await supabase.rpc('get_customer_by_phone', { phone_query: val });
+
+                    const profileRec = (customer && customer.length > 0) ? customer[0] : null;
+
+                    if (profileRec) {
+                        if (profileRec.full_name) inputName.value = profileRec.full_name;
+                        if (profileRec.address) inputAddress.value = profileRec.address;
 
                         // Atualiza o local storage 
                         localStorage.setItem('agenciaPizzas_Profile', JSON.stringify({
-                            name: data.full_name || "",
+                            name: profileRec.full_name || "",
                             phone: formattedPhone,
-                            address: data.address || ""
+                            address: profileRec.address || ""
                         }));
 
                         // Avisa o usuário e já prepara o histórico recarregado
@@ -925,18 +935,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         let dbOrders = [];
         if (supabase && phone) {
             try {
-                // Tenta achar o customer_id desse telefone para pegar os pedidos
-                const { data: customer } = await supabase.from('customers').select('id').eq('phone', phone).maybeSingle();
-                if (customer && customer.id) {
-                    const { data: orders } = await supabase.from('orders')
-                        .select('*')
-                        .eq('customer_id', customer.id)
-                        .order('created_at', { ascending: false })
-                        .limit(20);
-                    if (orders) dbOrders = orders;
-                }
+                // Busca SEGURA via RPC: O cliente não tem mais permissão de ler a tabela 'orders' diretamente.
+                // A função 'get_my_orders' no banco garante que ele só receba os SEUS pedidos.
+                const { data: orders, error: rpcErr } = await supabase.rpc('get_my_orders', { phone_query: phone });
+
+                if (orders) dbOrders = orders;
             } catch (e) {
-                console.warn("Erro ao buscar histórico do Supabase, fallback para LocalStorage.", e);
+                console.warn("Erro ao buscar histórico via RPC, fallback para LocalStorage.", e);
             }
         }
 
@@ -967,7 +972,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let items = [];
                 try { items = JSON.parse(order.items); } catch (e) { }
 
-                let itemsPreview = items.filter(i => !i.name.includes("Desconto")).map(i => `${i.quantity}x ${i.name}`).join(', ');
+                let itemsPreview = items.filter(i => !i.name.includes("Desconto")).map(i => `${i.quantity}x ${esc(i.name)}`).join(', ');
                 if (itemsPreview.length > 50) itemsPreview = itemsPreview.substring(0, 47) + '...';
 
                 // Repete a lógica de numérico e delivery_type (como no KDS)
