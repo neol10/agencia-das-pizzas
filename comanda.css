@@ -562,3 +562,110 @@
     background: #1eb954;
     transform: scale(1.05);
 }
+
+/* ==========================================================================
+   KDS Flash Notification (Novo Pedido)
+   ========================================================================== */
+@keyframes flash-kds {
+    0% {
+        background-color: var(--bg-body);
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+
+    50% {
+        background-color: rgba(227, 22, 57, 0.15);
+        box-shadow: inset 0 0 30px 10px rgba(227, 22, 57, 0.6);
+    }
+
+    100% {
+        background-color: var(--bg-body);
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+}
+
+body.kds-flash {
+    animation: flash-kds 0.8s ease-in-out 3;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE DO KDS (Comanda)
+   ========================================================================== */
+@media (max-width: 768px) {
+
+    /* Header KDS: compactar */
+    .kds-header {
+        padding: 10px 15px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .kds-logo-area h1 {
+        font-size: 1rem;
+    }
+
+    .kds-logo-area img {
+        height: 30px;
+    }
+
+    /* Ocultar label "Ao Vivo" em mobile */
+    .realtime-status span:not(.pulse-dot) {
+        display: none;
+    }
+
+    /* Body do KDS: permitir scroll (não travar) */
+    .comanda-body {
+        height: auto;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .kds-dashboard {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* Lanes: scroll horizontal em vez de 3 colunas */
+    .kds-lanes {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px;
+        gap: 10px;
+        height: calc(100vh - 120px);
+    }
+
+    .kds-lane {
+        min-width: 85vw;
+        flex: 0 0 85vw;
+        scroll-snap-align: start;
+    }
+
+    /* Cards do KDS: padding menor */
+    .kds-card {
+        padding: 14px;
+    }
+
+    .kds-order-id {
+        font-size: 1.2rem;
+    }
+
+    /* Login card: padding menor */
+    .login-card {
+        padding: 24px 20px;
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .kds-lane {
+        min-width: 92vw;
+        flex: 0 0 92vw;
+    }
+
+    .lane-header h2 {
+        font-size: 0.95rem;
+    }
+}

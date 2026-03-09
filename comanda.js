@@ -133,6 +133,12 @@ function playNotification() {
     } catch (e) {
         console.log('Áudio não disponível:', e);
     }
+
+    // Flash visual na tela
+    document.body.classList.add('kds-flash');
+    setTimeout(() => {
+        document.body.classList.remove('kds-flash');
+    }, 2400); // 3 piscadas de 0.8s = 2.4s
 }
 
 // BUSCA E RENDERIZAÇÃO DE PEDIDOS

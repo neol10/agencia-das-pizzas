@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dynamicContainer || !menuLoader || !supabase) return;
 
         try {
+            // Mostrar skeleton em vez de sumir com o container (Skeletons já estão no HTML e visíveis por padrão)
             const { data: categories, error: catError } = await supabase.from('categories').select('*').order('order_index');
             const { data: products, error: prodError } = await supabase.from('products').select('*').eq('is_active', true).order('name');
             const { data: settingsData, error: setError } = await supabase.from('settings').select('*').eq('id', 1).single();
@@ -230,17 +231,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (themeToggleBtn) {
         const themeIcon = themeToggleBtn.querySelector('i');
 
+        // Restaurar tema salvo ao carregar a página
+        const savedTheme = localStorage.getItem('agenciaPizzas_Theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.classList.remove('ph-sun');
+            themeIcon.classList.add('ph-moon');
+        }
+
         themeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
 
-            // Trocar o ícone conforme o tema
+            // Trocar o ícone conforme o tema e salvar preferência
             if (document.body.classList.contains('light-mode')) {
                 themeIcon.classList.remove('ph-sun');
                 themeIcon.classList.add('ph-moon');
+                localStorage.setItem('agenciaPizzas_Theme', 'light');
             } else {
                 themeIcon.classList.remove('ph-moon');
                 themeIcon.classList.add('ph-sun');
+                localStorage.setItem('agenciaPizzas_Theme', 'dark');
             }
+        });
+    }
+
+    // 4b. MENU HAMBURGUER (MOBILE)
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navLinks = document.getElementById('nav-links');
+    const hamburgerIcon = document.getElementById('hamburger-icon');
+
+    if (hamburgerBtn && navLinks) {
+        hamburgerBtn.addEventListener('click', () => {
+            const isOpen = navLinks.classList.toggle('open');
+            hamburgerIcon.className = isOpen ? 'ph ph-x' : 'ph ph-list';
+        });
+
+        // Fecha o menu ao clicar em qualquer link
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('open');
+                hamburgerIcon.className = 'ph ph-list';
+            });
         });
     }
 
@@ -513,6 +544,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateTotalDetailPrice();
         if (productDetailModal) productDetailModal.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        // Lógica do botão Compartilhar
+        const btnShare = document.getElementById('btn-share-product');
+        if (btnShare) {
+            btnShare.onclick = () => {
+                const text = `🍕 Olha que delícia! Estou com vontade de pedir: *${prod.name}* lá na Agência das Pizzas.\n\nVeja no cardápio online: https://agenciadaspizzas.vercel.app/`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            };
+        }
     }
 
     if (closeDetailBtn) {
@@ -734,8 +774,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Auto-preenchimento (Login automático) ao completar 11 dígitos
             if (val.length === 11 && supabase) {
                 try {
-                    const phoneToSearch = e.target.value.trim();
-                    const { data, error } = await supabase.from('customers').select('*').eq('phone', phoneToSearch).maybeSingle();
+                    const formattedPhone = e.target.value.trim();
+                    // Tenta com o telefone formatado e também com dígitos puros
+                    let { data, error } = await supabase.from('customers').select('*').eq('phone', formattedPhone).maybeSingle();
+                    if (!data) {
+                        // Tentativa 2: telefone sem formatação (somente dígitos)
+                        ({ data, error } = await supabase.from('customers').select('*').eq('phone', val).maybeSingle());
+                    }
                     if (data) {
                         if (data.full_name) inputName.value = data.full_name;
                         if (data.address) inputAddress.value = data.address;
@@ -743,7 +788,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Atualiza o local storage 
                         localStorage.setItem('agenciaPizzas_Profile', JSON.stringify({
                             name: data.full_name || "",
-                            phone: phoneToSearch,
+                            phone: formattedPhone,
                             address: data.address || ""
                         }));
 
@@ -1061,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // 1. SYNC SUPABASE (REI NEO DASHBOARD E KDS)
+            let orderShortId = '0000';
             if (supabase) {
                 try {
                     const { data: customer } = await supabase.from('customers').select('id').eq('phone', profile.phone).maybeSingle();
@@ -1083,14 +1129,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                         delivery_fee: deliveryFee
                     };
 
-                    await supabase.from('orders').insert([orderPayload]);
+                    const { data: insertedOrder } = await supabase.from('orders').insert([orderPayload]).select('id').single();
+                    if (insertedOrder) {
+                        const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
+                        orderShortId = numericHash.substring(numericHash.length - 4);
+
+                        let actives = JSON.parse(localStorage.getItem('agenciaPizzas_ActiveOrders')) || [];
+                        if (!actives.includes(insertedOrder.id)) actives.push(insertedOrder.id);
+                        localStorage.setItem('agenciaPizzas_ActiveOrders', JSON.stringify(actives));
+
+                        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                            Notification.requestPermission();
+                        }
+                        if (typeof window.initClientRealtime === 'function') window.initClientRealtime();
+                    }
                 } catch (e) {
                     console.warn("Falha ao registrar pedido no Dashboard.");
                 }
             }
 
             // Formata o texto do pedido (WHATSAPP)
-            let textoPedido = "*🍕 NOVO PEDIDO - Agência das Pizzas*\n";
+            let textoPedido = `*🍕 NOVO PEDIDO - Agência das Pizzas*\n*Nº ${orderShortId}*\n`;
             let tipoPedidoTxt = (deliveryType === 'entrega') ? "🛵 *ENTREGA*" : "🏪 *RETIRADA NO LOCAL*";
             textoPedido += `\n${tipoPedidoTxt}`;
             textoPedido += nomeCliente;
@@ -1136,10 +1195,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateCartUI();
             closeCart();
 
-            // WhatsApp real
-            const numeroWhatsApp = "5519981651230";
-            const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(textoPedido)}`;
-            window.open(urlWhatsApp, '_blank');
+            // Mostra o Modal de Sucesso
+            const successModal = document.getElementById('success-modal');
+            const successOrderId = document.getElementById('success-order-id');
+            const btnSuccessWa = document.getElementById('btn-success-whatsapp');
+            const btnSuccessClose = document.getElementById('btn-success-close');
+
+            if (successModal) {
+                successOrderId.textContent = `#${orderShortId}`;
+                successModal.classList.add('active');
+
+                // Ação do botão do WhatsApp
+                btnSuccessWa.onclick = () => {
+                    const numeroWhatsApp = "5519981651230";
+                    const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(textoPedido)}`;
+                    window.open(urlWhatsApp, '_blank');
+                    successModal.classList.remove('active');
+                };
+
+                btnSuccessClose.onclick = () => {
+                    successModal.classList.remove('active');
+                };
+            } else {
+                // Fallback se não existir modal
+                const numeroWhatsApp = "5519981651230";
+                const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(textoPedido)}`;
+                window.open(urlWhatsApp, '_blank');
+            }
         });
     }
 
@@ -1155,8 +1237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let hasVisibleProduct = false;
 
                 products.forEach(prod => {
-                    const name = prod.querySelector('.product-title').textContent.toLowerCase();
-                    const desc = prod.querySelector('.product-desc').textContent.toLowerCase();
+                    const titleEl = prod.querySelector('.product-title');
+                    const descEl = prod.querySelector('.product-desc');
+                    const name = titleEl ? titleEl.textContent.toLowerCase() : '';
+                    const desc = descEl ? descEl.textContent.toLowerCase() : '';
 
                     if (name.includes(term) || desc.includes(term)) {
                         prod.style.display = '';
@@ -1166,7 +1250,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                // Esconde a seção inteira se não tiver nenhum produto visível nela
                 if (hasVisibleProduct) {
                     section.style.display = '';
                 } else {
@@ -1175,5 +1258,76 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     }
+
+    // 8. BOTÃO VOLTAR AO TOPO
+    const backToTopBtn = document.getElementById('btn-back-to-top');
+    if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // 9. NOTIFICAÇÕES NATIVAS (PWA & REALTIME)
+    window.initClientRealtime = function () {
+        if (!supabase) return;
+        const activeOrders = JSON.parse(localStorage.getItem('agenciaPizzas_ActiveOrders')) || [];
+        if (activeOrders.length === 0) return;
+
+        supabase.channel('customer-orders')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
+                const updated = payload.new;
+                if (activeOrders.includes(updated.id)) {
+                    sendClientNotification(updated);
+                }
+            }).subscribe();
+    }
+
+    function sendClientNotification(order) {
+        let msg = "";
+        if (order.status === 'preparando') msg = "👨‍🍳 Pizzaiolo na massa! Seu pedido começou a ser preparado.";
+        if (order.status === 'pronto' || order.status === 'enviado') msg = order.delivery_type === 'entrega' ? "🛵 Seu pedido saiu para entrega!" : "🍕 Seu pedido está pronto para retirada!";
+        if (order.status === 'entregue') {
+            msg = "🎉 Pedido finalizado. Bom apetite!";
+            let actives = JSON.parse(localStorage.getItem('agenciaPizzas_ActiveOrders')) || [];
+            actives = actives.filter(id => id !== order.id);
+            localStorage.setItem('agenciaPizzas_ActiveOrders', JSON.stringify(actives));
+        }
+
+        if (!msg) return;
+
+        if ("Notification" in window && Notification.permission === 'granted') {
+            try {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification('Agência das Pizzas', {
+                        body: msg,
+                        icon: 'logo pizza.jpg',
+                        badge: 'logo pizza.jpg',
+                        vibrate: [200, 100, 200]
+                    });
+                }).catch(() => {
+                    new Notification('Agência das Pizzas', { body: msg, icon: 'logo pizza.jpg' });
+                });
+            } catch (e) {
+                new Notification('Agência das Pizzas', { body: msg, icon: 'logo pizza.jpg' });
+            }
+        }
+    }
+
+    window.initClientRealtime();
+
+    setTimeout(() => {
+        const p = JSON.parse(localStorage.getItem('agenciaPizzas_Profile'));
+        if (p && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }, 5000);
 
 });

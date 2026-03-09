@@ -9,7 +9,8 @@ const ASSETS_TO_CACHE = [
     './admin.js',
     './comanda.js',
     './manifest.json',
-    './logo%20pizza.jpg'
+    './logo%20pizza.jpg',
+    './404.html'
 ];
 
 self.addEventListener('install', (event) => {
@@ -46,9 +47,15 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
-                return response || fetch(event.request).catch(() => {
-                    // Fallback se estiver offline e não tiver no cache
-                    return caches.match('./index.html');
+                if (response) {
+                    return response;
+                }
+                return fetch(event.request).catch(() => {
+                    // Fallback se estiver offline
+                    // Se for navegação de HTML, retorna o index
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
                 });
             })
     );

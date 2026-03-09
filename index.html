@@ -50,7 +50,7 @@
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function (OneSignal) {
             await OneSignal.init({
-                appId: "COLOQUE_SEU_APP_ID_AQUI", // Insira o App ID do OneSignal aqui
+                appId: "d4b72a3c-bfee-49b7-9d2d-0cf8db3d59cb", // Insira o App ID do OneSignal aqui
             });
         });
     </script>
@@ -61,11 +61,16 @@
     <!-- Navegação / Header -->
     <header class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo">
+            <span class="logo" id="logo-secret" style="cursor: default; user-select: none;">
                 <img src="logo pizza.jpg" alt="Logo Agência das Pizzas" class="logo-img">
                 <span>Agência das Pizzas</span>
-            </a>
-            <nav class="nav-links">
+            </span>
+            <script>
+                document.getElementById('logo-secret').addEventListener('dblclick', function () {
+                    window.location.href = 'admin.html';
+                });
+            </script>
+            <nav class="nav-links" id="nav-links">
                 <a href="#pizzas">Pizzas</a>
                 <a href="#calzones">Calzones</a>
                 <a href="#sucos">Sucos</a>
@@ -80,7 +85,10 @@
                     <i class="ph ph-shopping-cart"></i>
                     <span id="cart-badge" class="cart-badge" style="display: none;">0</span>
                 </button>
-                <a href="#pizzas" class="btn-primary">Fazer Pedido</a>
+                <a href="#pizzas" class="btn-primary nav-pedido-btn">Fazer Pedido</a>
+                <button id="hamburger-btn" class="btn-icon hamburger-btn" aria-label="Menu">
+                    <i class="ph ph-list" id="hamburger-icon"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -112,6 +120,14 @@
         </section>
 
         <!-- Menu Navigation Anchors (Sticky) -->
+        <div class="search-nav-container" style="max-width:1280px; margin: 0 auto; padding: 1rem 2rem 0;">
+            <div style="position:relative; margin-bottom: 15px;">
+                <input type="text" id="menu-search-input" placeholder="Buscar por sabor, ingrediente..."
+                    style="width:100%; padding:14px 20px 14px 45px; border-radius:30px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-light); font-size:1rem; outline:none;" />
+                <i class="ph ph-magnifying-glass"
+                    style="position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:1.2rem;"></i>
+            </div>
+        </div>
 
         <nav class="category-nav">
             <a href="#pizzas" class="category-link active"><i class="ph ph-pizza"></i> Pizzas</a>
@@ -122,12 +138,49 @@
 
         <!-- Container do Cardápio -->
         <div class="menu-container" id="dynamic-menu-container">
-            <!-- Loader enquanto busca do banco -->
-            <div id="menu-loader" class="loader-container"
-                style="min-height: 40vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <i class="ph ph-spinner ph-spin" style="font-size: 3rem; color: var(--primary-red);"></i>
-                <p style="margin-top: 15px; color: var(--text-muted); font-size: 1.1rem;">Buscando Cardápio
-                    Fresquinho...</p>
+            <!-- Skeletons enquanto busca do banco -->
+            <div id="menu-loader" class="menu-grid" style="padding: 2rem 0;">
+                <!-- Injectar 8 skeletons falsos -->
+                <!-- Repetir o skeleton-card -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 2 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
+                <!-- 4 -->
+                <div class="glass-card product-card" style="box-shadow:none; border-color:transparent;">
+                    <div class="skeleton-img skeleton"></div>
+                    <div class="card-content">
+                        <div class="skeleton-title skeleton"></div>
+                        <div class="skeleton-text skeleton"></div>
+                        <div class="skeleton-text skeleton short"></div>
+                        <div class="skeleton-button skeleton"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Os <section>, categorias e produtos (glass-card) agora serão injetados via JS Aqui dentro! -->
@@ -296,6 +349,10 @@
                     <div class="detail-price-row">
                         <strong id="detail-price">R$ 0,00</strong>
                     </div>
+                    <!-- Botão de Compartilhar via WhatsApp -->
+                    <button id="btn-share-product" class="btn-share" style="margin-top: 15px;">
+                        <i class="ph-fill ph-whatsapp-logo"></i> Compartilhar
+                    </button>
                 </div>
             </div>
 
@@ -328,6 +385,31 @@
                     <i class="ph ph-shopping-bag"></i> Adicionar • <span id="detail-total-price">R$ 0,00</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal / Sucesso (Comprovante) -->
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal-content glass-card" style="text-align: center; padding: 40px 20px;">
+            <i class="ph-fill ph-check-circle" style="font-size: 5rem; color: #10b981; margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom: 10px;">Pedido Confirmado!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Seu pedido foi registrado no sistema.</p>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                <p style="font-size: 0.9rem; margin-bottom: 5px;">Número do Pedido</p>
+                <h3 id="success-order-id" style="font-size: 2rem; color: var(--primary-red); margin: 0;">#0000</h3>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Para a loja começar a preparar,
+                confirme no WhatsApp!</p>
+
+            <button id="btn-success-whatsapp" class="btn-primary"
+                style="width: 100%; font-size: 1.1rem; padding: 14px; background: #25d366; box-shadow: 0 4px 15px rgba(37,211,102,0.4);">
+                <i class="ph-fill ph-whatsapp-logo"></i> Enviar Confirmação
+            </button>
+            <button id="btn-success-close" class="btn-secondary"
+                style="width: 100%; margin-top: 10px; border:none; background:transparent;">Fechar e voltar pro
+                início</button>
         </div>
     </div>
 
