@@ -24,16 +24,6 @@
 
     <!-- Supabase Client (CDN) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "d4b72a3c-bfee-49b7-9d2d-0cf8db3d59cb", // Insira o App ID do OneSignal aqui
-            });
-        });
-    </script>
 </head>
 
 <body>
@@ -61,7 +51,7 @@
     <!-- Header do Admin (Oculto até logar) -->
     <div id="admin-wrapper" style="display: none;">
         <header class="navbar admin-navbar">
-            <div class="nav-container" style="justify-content: space-between;">
+            <div class="nav-container">
                 <a href="/" class="logo">
                     <img src="logo pizza.jpg" alt="Logo" class="logo-img" style="filter: grayscale(100%);">
                     <span>Painel <strong>Admin</strong></span>
@@ -311,6 +301,12 @@
             preload="auto"></audio>
 
     </div><!-- End Admin Wrapper -->
+
+    <!-- Firebase (FCM) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="push_fcm.js"></script>
 
     <script src="admin.js"></script>
     <!-- Registrar Service Worker PWA -->
