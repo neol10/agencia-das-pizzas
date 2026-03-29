@@ -20,10 +20,42 @@ body.admin-bg {
     padding: 0 24px;
 }
 
+/* Header do admin responsivo */
+.admin-navbar .nav-container {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-navbar .logo {
+    flex-shrink: 0;
+}
+
+.admin-navbar .nav-container > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
 @media (max-width: 600px) {
     .admin-main {
         margin: 20px auto;
         padding: 0 16px;
+    }
+
+    .admin-navbar .nav-container {
+        padding: 0.75rem 1rem;
+    }
+
+    .admin-navbar .nav-container > div {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .admin-navbar .nav-container > div a,
+    .admin-navbar .nav-container > div button {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -133,6 +165,28 @@ body.admin-bg {
     gap: 10px;
 }
 
+@media (max-width: 720px) {
+    .admin-product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .admin-product-info p {
+        max-width: 100%;
+    }
+
+    .admin-product-price {
+        margin-right: 0;
+    }
+
+    .admin-product-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
 .btn-toggle-status {
     background: transparent;
     border: 1px solid #10b981;
@@ -225,6 +279,40 @@ body.admin-bg {
 
 .admin-list-item:hover {
     background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 720px) {
+    .admin-list-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .admin-list-item .admin-product-actions,
+    .admin-list-item select,
+    .admin-list-item button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-tabs {
+        gap: 6px;
+        padding-bottom: 8px;
+    }
+
+    .admin-tab {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+
+    .admin-category {
+        padding: 18px;
+    }
+
+    .admin-category h3 {
+        font-size: 1.15rem;
+    }
 }
 
 /* Área de Upload */
