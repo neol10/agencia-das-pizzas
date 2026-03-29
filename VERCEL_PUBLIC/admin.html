@@ -24,16 +24,6 @@
 
     <!-- Supabase Client (CDN) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "d4b72a3c-bfee-49b7-9d2d-0cf8db3d59cb", // Insira o App ID do OneSignal aqui
-            });
-        });
-    </script>
 </head>
 
 <body>
@@ -149,6 +139,32 @@
                             <button id="btn-toggle-store" class="btn-primary"
                                 style="background-color: var(--primary-red);"><i class="ph ph-power"></i>
                                 Alternar</button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 24px; margin-top: 20px;">
+                        <h3><i class="ph ph-bell"></i> Notificacoes Push (FCM)</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Envie alertas manuais para admin, comanda ou todos. Requer FCM configurado.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                            <input type="text" id="push-title" class="profile-input" placeholder="Titulo da notificacao">
+                            <textarea id="push-body" class="profile-input" rows="3"
+                                placeholder="Mensagem da notificacao"></textarea>
+                            <input type="url" id="push-url" class="profile-input"
+                                placeholder="URL de destino (opcional)">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select id="push-app" class="profile-input" style="max-width: 220px;">
+                                    <option value="all">Todos</option>
+                                    <option value="comanda">Comanda (KDS)</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="site">Site (publico)</option>
+                                </select>
+                                <button id="btn-send-push" class="btn-primary" style="padding: 12px 20px;">
+                                    <i class="ph ph-paper-plane-right"></i> Enviar Push
+                                </button>
+                            </div>
+                            <p id="push-status" style="font-size: 0.9rem; margin: 0; display: none;"></p>
                         </div>
                     </div>
 
@@ -311,6 +327,12 @@
             preload="auto"></audio>
 
     </div><!-- End Admin Wrapper -->
+
+    <!-- Firebase (FCM) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="push_fcm.js"></script>
 
     <script src="admin.js"></script>
     <!-- Registrar Service Worker PWA -->

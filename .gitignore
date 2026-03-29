@@ -1,0 +1,5 @@
+# Segredos
+chavepvd/*.json
+
+# Supabase CLI
+supabase/.temp/

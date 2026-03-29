@@ -44,16 +44,6 @@
     <link rel="shortcut icon" href="logo%20pizza.jpg" type="image/jpeg">
     <!-- Phosphor Icons (para ícones modernos e limpos) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "d4b72a3c-bfee-49b7-9d2d-0cf8db3d59cb", // Insira o App ID do OneSignal aqui
-            });
-        });
-    </script>
 </head>
 
 <body>
@@ -437,6 +427,13 @@
 
     <!-- Script para Interatividade & Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <!-- Firebase (FCM) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="push_fcm.js"></script>
+
     <script src="script.js"></script>
     <!-- Registrar Service Worker PWA -->
     <script>

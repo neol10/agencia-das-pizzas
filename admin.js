@@ -1,6 +1,7 @@
 // REI NEO - Sistema de Gestão Suprema 👑
 const supabaseUrl = 'https://abznheaxvoffclcgqrmm.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiem5oZWF4dm9mZmNsY2dxcm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MzE3ODUsImV4cCI6MjA4ODUwNzc4NX0.9Zwi4QTORguSHV4feMoZbr953irktkCnDrY0AHQEaa0';
+const sendPushUrl = `${supabaseUrl}/functions/v1/send-push`;
 let dbClient = null;
 
 // Elementos Globais
@@ -35,10 +36,74 @@ function initAdmin() {
     }
     if (dbClient) {
         initTabs();
+        initPushControls();
         fetchAllData();
     } else {
         adminLoader.innerHTML = '<p style="color:red;">Falha ao carregar banco.</p>';
     }
+}
+
+function initPushControls() {
+    const btnSend = document.getElementById('btn-send-push');
+    if (!btnSend) return;
+
+    const inputTitle = document.getElementById('push-title');
+    const inputBody = document.getElementById('push-body');
+    const inputUrl = document.getElementById('push-url');
+    const selectApp = document.getElementById('push-app');
+    const statusEl = document.getElementById('push-status');
+
+    const setStatus = (text, isError = false) => {
+        if (!statusEl) return;
+        statusEl.style.display = text ? 'block' : 'none';
+        statusEl.style.color = isError ? '#ef4444' : '#10b981';
+        statusEl.textContent = text;
+    };
+
+    btnSend.addEventListener('click', async () => {
+        const title = inputTitle ? inputTitle.value.trim() : '';
+        const body = inputBody ? inputBody.value.trim() : '';
+        const url = inputUrl ? inputUrl.value.trim() : '';
+        const app = selectApp ? selectApp.value : 'all';
+
+        if (!title || !body) {
+            setStatus('Preencha titulo e mensagem.', true);
+            return;
+        }
+
+        btnSend.disabled = true;
+        const originalText = btnSend.textContent;
+        btnSend.textContent = 'Enviando...';
+        setStatus('Enviando push...', false);
+
+        try {
+            const payload = { title, body, app };
+            if (url) payload.url = url;
+
+            const res = await fetch(sendPushUrl, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let json = {};
+            try {
+                json = await res.json();
+            } catch { }
+
+            if (!res.ok || json.error) {
+                const errMsg = json.error || `Falha HTTP ${res.status}`;
+                throw new Error(errMsg);
+            }
+
+            setStatus(`Push enviado. Tokens: ${json.sent || 0}/${json.totalTokens || 0}.`, false);
+        } catch (e) {
+            setStatus(`Erro ao enviar push: ${e.message || e}`, true);
+        } finally {
+            btnSend.disabled = false;
+            btnSend.textContent = originalText;
+        }
+    });
 }
 
 // 1. SISTEMA DE ABAS
@@ -727,6 +792,15 @@ if (btnLogin) {
         } else {
             err.style.display = 'none';
             checkLogin();
+
+            // Registra token FCM (push) após login
+            try {
+                if (window.ensureFcmPush) {
+                    await window.ensureFcmPush(dbClient, 'admin');
+                }
+            } catch (e) {
+                console.log('FCM não configurado/indisponível:', e);
+            }
         }
     });
 }

@@ -88,6 +88,15 @@ loginForm.addEventListener('submit', async (e) => {
         loginError.style.display = 'block';
     } else {
         showKdsDashboard();
+
+        // Registra token FCM (push) após login
+        try {
+            if (window.ensureFcmPush) {
+                await window.ensureFcmPush(dbClient, 'comanda');
+            }
+        } catch (e) {
+            console.log('FCM não configurado/indisponível:', e);
+        }
     }
 });
 
@@ -118,14 +127,13 @@ btnSound.addEventListener('click', async () => {
         }
     }
 
-    // 2. Reforça OneSignal se disponível
-    if (window.OneSignalDeferred) {
-        OneSignalDeferred.push(async function (OneSignal) {
-            const isPushSupported = OneSignal.Notifications.isPushSupported();
-            if (isPushSupported) {
-                await OneSignal.Notifications.requestPermission();
-            }
-        });
+    // 2. Reforça FCM (Firebase) se disponível
+    try {
+        if (window.ensureFcmPush) {
+            await window.ensureFcmPush(dbClient, 'comanda');
+        }
+    } catch (e) {
+        console.log('FCM não configurado/indisponível:', e);
     }
 
     // 3. Toggle do som (função original)

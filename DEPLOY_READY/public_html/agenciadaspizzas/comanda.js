@@ -82,6 +82,15 @@ loginForm.addEventListener('submit', async (e) => {
         loginError.style.display = 'block';
     } else {
         showKdsDashboard();
+
+        // Registra token FCM (push) após login
+        try {
+            if (window.ensureFcmPush) {
+                await window.ensureFcmPush(dbClient, 'comanda');
+            }
+        } catch (e) {
+            console.log('FCM não configurado/indisponível:', e);
+        }
     }
 });
 
@@ -102,7 +111,7 @@ btnFullscreen.addEventListener('click', () => {
     }
 });
 
-btnSound.addEventListener('click', () => {
+btnSound.addEventListener('click', async () => {
     isSoundEnabled = !isSoundEnabled;
     if (isSoundEnabled) {
         iconSound.className = 'ph-fill ph-bell-ringing';
@@ -110,6 +119,15 @@ btnSound.addEventListener('click', () => {
     } else {
         iconSound.className = 'ph ph-bell-slash';
         iconSound.style.color = '#ef4444';
+    }
+
+    // Reforça FCM (Firebase) se disponível
+    try {
+        if (window.ensureFcmPush) {
+            await window.ensureFcmPush(dbClient, 'comanda');
+        }
+    } catch (e) {
+        console.log('FCM não configurado/indisponível:', e);
     }
 });
 

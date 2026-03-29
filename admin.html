@@ -143,6 +143,32 @@
                     </div>
 
                     <div class="glass-card" style="padding: 24px; margin-top: 20px;">
+                        <h3><i class="ph ph-bell"></i> Notificacoes Push (FCM)</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Envie alertas manuais para admin, comanda ou todos. Requer FCM configurado.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                            <input type="text" id="push-title" class="profile-input" placeholder="Titulo da notificacao">
+                            <textarea id="push-body" class="profile-input" rows="3"
+                                placeholder="Mensagem da notificacao"></textarea>
+                            <input type="url" id="push-url" class="profile-input"
+                                placeholder="URL de destino (opcional)">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select id="push-app" class="profile-input" style="max-width: 220px;">
+                                    <option value="all">Todos</option>
+                                    <option value="comanda">Comanda (KDS)</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="site">Site (publico)</option>
+                                </select>
+                                <button id="btn-send-push" class="btn-primary" style="padding: 12px 20px;">
+                                    <i class="ph ph-paper-plane-right"></i> Enviar Push
+                                </button>
+                            </div>
+                            <p id="push-status" style="font-size: 0.9rem; margin: 0; display: none;"></p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 24px; margin-top: 20px;">
                         <h3><i class="ph ph-motorcycle"></i> Taxa de Entrega</h3>
                         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
                             Defina o valor cobrado pela entrega. Use R$ 0,00 para entrega grátis. O cliente verá este

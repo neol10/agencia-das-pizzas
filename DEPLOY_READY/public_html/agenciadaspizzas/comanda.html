@@ -156,7 +156,25 @@
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Firebase (FCM) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="push_fcm.js"></script>
+
     <script src="comanda.js"></script>
+
+    <!-- Registrar Service Worker PWA (necessário pro FCM no Web Push) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker PWA registrado no Comanda: ', registration.scope))
+                    .catch(error => console.log('Falha ao registrar ServiceWorker no Comanda: ', error));
+            });
+        }
+    </script>
 </body>
 
 </html>

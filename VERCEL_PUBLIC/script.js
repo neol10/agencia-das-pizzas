@@ -1351,10 +1351,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.initClientRealtime();
 
+    // Se já tiver permissão, registra token FCM público (site)
+    try {
+        if (supabase && window.ensureFcmPushPublic && "Notification" in window && Notification.permission === 'granted') {
+            window.ensureFcmPushPublic(supabase, 'site');
+        }
+    } catch (e) {
+        console.log('FCM público não configurado/indisponível:', e);
+    }
+
     setTimeout(() => {
         const p = JSON.parse(localStorage.getItem('agenciaPizzas_Profile'));
         if (p && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission();
+            Notification.requestPermission().then((res) => {
+                if (res === 'granted') {
+                    try {
+                        if (supabase && window.ensureFcmPushPublic) {
+                            window.ensureFcmPushPublic(supabase, 'site');
+                        }
+                    } catch (e) {
+                        console.log('FCM público não configurado/indisponível:', e);
+                    }
+                }
+            });
         }
     }, 5000);
 

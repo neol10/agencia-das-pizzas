@@ -13,16 +13,6 @@
     <link rel="apple-touch-icon" href="logo%20pizza.jpg">
     <link rel="icon" href="logo%20pizza.jpg" type="image/jpeg">
     <link rel="shortcut icon" href="logo%20pizza.jpg" type="image/jpeg">
-    <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "d4b72a3c-bfee-49b7-9d2d-0cf8db3d59cb", // Insira o App ID do OneSignal aqui
-            });
-        });
-    </script>
 </head>
 
 <body class="comanda-body">
@@ -171,7 +161,25 @@
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Firebase (FCM) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="push_fcm.js"></script>
+
     <script src="comanda.js"></script>
+
+    <!-- Registrar Service Worker PWA (necessário pro FCM no Web Push) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker PWA registrado no Comanda: ', registration.scope))
+                    .catch(error => console.log('Falha ao registrar ServiceWorker no Comanda: ', error));
+            });
+        }
+    </script>
 </body>
 
 </html>

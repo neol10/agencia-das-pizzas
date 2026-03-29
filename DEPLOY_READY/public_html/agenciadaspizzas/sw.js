@@ -1,4 +1,43 @@
 const CACHE_NAME = 'neo-cache-v7';
+// --- FCM (Firebase Cloud Messaging) - opcional ---
+try {
+    importScripts('./firebase-config.js');
+    importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
+    importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+
+    const isMissingOrPlaceholder = (v) => !v || (typeof v === 'string' && v.trim().toUpperCase().startsWith('YOUR_'));
+    const cfg = self.FIREBASE_CONFIG;
+
+    const hasValidConfig = cfg
+        && !isMissingOrPlaceholder(cfg.apiKey)
+        && !isMissingOrPlaceholder(cfg.authDomain)
+        && !isMissingOrPlaceholder(cfg.projectId)
+        && !isMissingOrPlaceholder(cfg.messagingSenderId)
+        && !isMissingOrPlaceholder(cfg.appId);
+
+    if (self.firebase && hasValidConfig && (!self.firebase.apps || self.firebase.apps.length === 0)) {
+        self.firebase.initializeApp(cfg);
+    }
+
+    if (self.firebase && hasValidConfig && self.firebase.messaging) {
+        const messaging = self.firebase.messaging();
+
+        messaging.onBackgroundMessage((payload) => {
+            const title = payload?.notification?.title || 'Agência das Pizzas';
+            const body = payload?.notification?.body || payload?.data?.body || 'Você tem uma nova notificação.';
+            const icon = payload?.notification?.icon || 'logo%20pizza.jpg';
+
+            self.registration.showNotification(title, {
+                body,
+                icon,
+                badge: 'logo%20pizza.jpg'
+            });
+        });
+    }
+} catch (e) {
+    // Se não tiver config ou não estiver usando FCM, ignora.
+}
+
 const ASSETS_TO_CACHE = [
     './index.html',
     './admin.html',
@@ -6,6 +45,8 @@ const ASSETS_TO_CACHE = [
     './styles.css',
     './comanda.css',
     './script.js',
+    './firebase-config.js',
+    './push_fcm.js',
     './admin.js',
     './comanda.js',
     './manifest.json',
