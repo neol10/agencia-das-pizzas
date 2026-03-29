@@ -37,7 +37,7 @@ try {
     // Se não tiver config ou não estiver usando FCM, ignora.
 }
 
-const CACHE_NAME = 'neo-cache-v8';
+const CACHE_NAME = 'neo-cache-v9';
 const ASSETS_TO_CACHE = [
     './',
     '/admin',
@@ -47,6 +47,8 @@ const ASSETS_TO_CACHE = [
     './script.js',
     './firebase-config.js',
     './push_fcm.js',
+    './manifest-admin.json',
+    './manifest-comanda.json',
     './admin.js',
     './comanda.js',
     './manifest.json',

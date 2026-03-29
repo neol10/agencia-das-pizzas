@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neo-cache-v8';
+const CACHE_NAME = 'neo-cache-v9';
 // --- FCM (Firebase Cloud Messaging) - opcional ---
 try {
     importScripts('./firebase-config.js');
@@ -47,6 +47,8 @@ const ASSETS_TO_CACHE = [
     './script.js',
     './firebase-config.js',
     './push_fcm.js',
+    './manifest-admin.json',
+    './manifest-comanda.json',
     './admin.js',
     './comanda.js',
     './manifest.json',

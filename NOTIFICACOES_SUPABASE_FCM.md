@@ -11,6 +11,12 @@ Isso cria:
 - `public.push_tokens` (tokens de usuários logados via Supabase Auth: admin/comanda)
 - `public.push_tokens_public` (tokens do site/cliente sem login; sem SELECT público)
 
+## 1b) Permissoes para pedidos e clientes (obrigatorio para a Comanda)
+
+Se os pedidos nao chegam na Comanda, execute:
+- `orders_public_insert.sql`
+- `customers_public_upsert.sql`
+
 ## 2) Firebase: criar projeto e pegar credenciais
 
 No Firebase Console:

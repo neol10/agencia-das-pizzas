@@ -1,0 +1,25 @@
+{
+    "name": "Agência das Pizzas - Comanda",
+    "short_name": "Comanda",
+    "description": "Comanda digital da cozinha.",
+    "start_url": "./comanda",
+    "scope": "./comanda",
+    "display": "standalone",
+    "background_color": "#0f121b",
+    "theme_color": "#ef4444",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "./logo%20pizza.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "./logo%20pizza.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg",
+            "purpose": "any maskable"
+        }
+    ]
+}
