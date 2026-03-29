@@ -1143,7 +1143,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             let orderShortId = '0000';
             if (supabase) {
                 try {
-                    const { data: customer } = await supabase.from('customers').select('id').eq('phone', clientPhone).maybeSingle();
+                    let customer = null;
+                    try {
+                        const { data: customerData, error: customerErr } = await supabase
+                            .rpc('get_customer_by_phone', { phone_query: clientPhone });
+                        if (!customerErr && Array.isArray(customerData) && customerData[0]) {
+                            customer = customerData[0];
+                        }
+                    } catch (e) {
+                        console.warn('Falha ao buscar cliente por telefone:', e);
+                    }
 
                     const payloadItems = cart.map(item => ({ ...item }));
                     if (activeCoupon) {
@@ -1163,8 +1172,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         delivery_fee: deliveryFee
                     };
 
-                    const { data: insertedOrder } = await supabase.from('orders').insert([orderPayload]).select('id').single();
-                    if (insertedOrder) {
+                    const { data: insertedOrder, error: orderErr } = await supabase
+                        .from('orders')
+                        .insert([orderPayload])
+                        .select('id')
+                        .single();
+
+                    if (orderErr) {
+                        console.warn('Falha ao inserir pedido:', orderErr);
+                        showToast('Falha ao registrar pedido. Tente novamente.');
+                    } else if (insertedOrder?.id) {
                         const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
                         orderShortId = numericHash.substring(numericHash.length - 4);
 
@@ -1176,9 +1193,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             Notification.requestPermission();
                         }
                         if (typeof window.initClientRealtime === 'function') window.initClientRealtime();
+                    } else {
+                        orderShortId = `${Date.now()}`.slice(-4);
                     }
                 } catch (e) {
-                    console.warn("Falha ao registrar pedido no Dashboard.");
+                    console.warn("Falha ao registrar pedido no Dashboard.", e);
+                    showToast('Falha ao registrar pedido. Tente novamente.');
                 }
             }
 

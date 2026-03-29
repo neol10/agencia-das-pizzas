@@ -1080,9 +1080,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // 1. SYNC SUPABASE (REI NEO DASHBOARD E KDS)
+            let orderShortId = '0000';
             if (supabase) {
                 try {
-                    const { data: customer } = await supabase.from('customers').select('id').eq('phone', profile.phone).maybeSingle();
+                    let customer = null;
+                    try {
+                        const { data: customerData, error: customerErr } = await supabase
+                            .rpc('get_customer_by_phone', { phone_query: profile.phone });
+                        if (!customerErr && Array.isArray(customerData) && customerData[0]) {
+                            customer = customerData[0];
+                        }
+                    } catch (e) {
+                        console.warn('Falha ao buscar cliente por telefone:', e);
+                    }
 
                     const payloadItems = cart.map(item => ({ ...item }));
                     if (activeCoupon) {
@@ -1102,14 +1112,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                         delivery_fee: deliveryFee
                     };
 
-                    await supabase.from('orders').insert([orderPayload]);
+                    const { data: insertedOrder, error: orderErr } = await supabase
+                        .from('orders')
+                        .insert([orderPayload])
+                        .select('id')
+                        .single();
+
+                    if (orderErr) {
+                        console.warn('Falha ao inserir pedido:', orderErr);
+                        showToast('Falha ao registrar pedido. Tente novamente.');
+                    } else if (insertedOrder?.id) {
+                        const numericHash = parseInt(insertedOrder.id.replace(/-/g, '').substring(0, 8), 16).toString();
+                        orderShortId = numericHash.substring(numericHash.length - 4);
+                    } else {
+                        orderShortId = `${Date.now()}`.slice(-4);
+                    }
                 } catch (e) {
-                    console.warn("Falha ao registrar pedido no Dashboard.");
+                    console.warn("Falha ao registrar pedido no Dashboard.", e);
+                    showToast('Falha ao registrar pedido. Tente novamente.');
                 }
             }
 
             // Formata o texto do pedido (WHATSAPP)
-            let textoPedido = "*🍕 NOVO PEDIDO - Agência das Pizzas*\n";
+            let textoPedido = `*🍕 NOVO PEDIDO - Agência das Pizzas*\n*Nº ${orderShortId}*\n`;
             let tipoPedidoTxt = (deliveryType === 'entrega') ? "🛵 *ENTREGA*" : "🏪 *RETIRADA NO LOCAL*";
             textoPedido += `\n${tipoPedidoTxt}`;
             textoPedido += nomeCliente;
