@@ -6,6 +6,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiem5oZWF4dm9mZmNsY2dxcm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MzE3ODUsImV4cCI6MjA4ODUwNzc4NX0.9Zwi4QTORguSHV4feMoZbr953irktkCnDrY0AHQEaa0';
     const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
+    function cleanupLegacyOneSignalSw() {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations()
+            .then((regs) => {
+                regs.forEach((reg) => {
+                    const urls = [reg.active?.scriptURL, reg.waiting?.scriptURL, reg.installing?.scriptURL].filter(Boolean);
+                    if (urls.some((u) => u.includes('OneSignalSDKWorker.js'))) {
+                        reg.pushManager?.getSubscription()
+                            .then((sub) => { if (sub) sub.unsubscribe(); })
+                            .catch(() => { });
+                        reg.unregister();
+                    }
+                });
+            })
+            .catch(() => { });
+    }
+
+    cleanupLegacyOneSignalSw();
+
     // Helper para evitar XSS (Injeção de Script)
     function esc(t) {
         if (!t) return "";

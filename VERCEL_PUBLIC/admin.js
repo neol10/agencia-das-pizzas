@@ -30,11 +30,29 @@ function esc(t) {
         .replace(/'/g, "&#039;");
 }
 
+function cleanupLegacyOneSignalSw() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.getRegistrations()
+        .then((regs) => {
+            regs.forEach((reg) => {
+                const urls = [reg.active?.scriptURL, reg.waiting?.scriptURL, reg.installing?.scriptURL].filter(Boolean);
+                if (urls.some((u) => u.includes('OneSignalSDKWorker.js'))) {
+                    reg.pushManager?.getSubscription()
+                        .then((sub) => { if (sub) sub.unsubscribe(); })
+                        .catch(() => { });
+                    reg.unregister();
+                }
+            });
+        })
+        .catch(() => { });
+}
+
 function initAdmin() {
     if (!dbClient && window.supabase) {
         dbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
     }
     if (dbClient) {
+        cleanupLegacyOneSignalSw();
         initTabs();
         initPushControls();
         fetchAllData();
@@ -44,13 +62,13 @@ function initAdmin() {
 }
 
 function initPushControls() {
-    const btnSend = document.getElementById('btn-send-push');
-    if (!btnSend) return;
+    const btnSendAdmin = document.getElementById('btn-send-push-admin');
+    const btnSendClient = document.getElementById('btn-send-push-client');
+    if (!btnSendAdmin && !btnSendClient) return;
 
     const inputTitle = document.getElementById('push-title');
     const inputBody = document.getElementById('push-body');
     const inputUrl = document.getElementById('push-url');
-    const selectApp = document.getElementById('push-app');
     const statusEl = document.getElementById('push-status');
 
     const setStatus = (text, isError = false) => {
@@ -60,21 +78,23 @@ function initPushControls() {
         statusEl.textContent = text;
     };
 
-    btnSend.addEventListener('click', async () => {
+    async function handleSend(app, targetLabel, btn) {
         const title = inputTitle ? inputTitle.value.trim() : '';
         const body = inputBody ? inputBody.value.trim() : '';
         const url = inputUrl ? inputUrl.value.trim() : '';
-        const app = selectApp ? selectApp.value : 'all';
 
         if (!title || !body) {
             setStatus('Preencha titulo e mensagem.', true);
             return;
         }
 
-        btnSend.disabled = true;
-        const originalText = btnSend.textContent;
-        btnSend.textContent = 'Enviando...';
-        setStatus('Enviando push...', false);
+        if (btn) {
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Enviando...';
+            setStatus(`Enviando push para ${targetLabel}...`, false);
+            btn.dataset.originalText = originalText;
+        }
 
         try {
             const payload = { title, body, app };
@@ -96,14 +116,25 @@ function initPushControls() {
                 throw new Error(errMsg);
             }
 
-            setStatus(`Push enviado. Tokens: ${json.sent || 0}/${json.totalTokens || 0}.`, false);
+            setStatus(`Push enviado para ${targetLabel}. Tokens: ${json.sent || 0}/${json.totalTokens || 0}.`, false);
         } catch (e) {
             setStatus(`Erro ao enviar push: ${e.message || e}`, true);
         } finally {
-            btnSend.disabled = false;
-            btnSend.textContent = originalText;
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = btn.dataset.originalText || btn.textContent;
+                delete btn.dataset.originalText;
+            }
         }
-    });
+    }
+
+    if (btnSendAdmin) {
+        btnSendAdmin.addEventListener('click', () => handleSend('admin', 'admin', btnSendAdmin));
+    }
+
+    if (btnSendClient) {
+        btnSendClient.addEventListener('click', () => handleSend('site', 'clientes', btnSendClient));
+    }
 }
 
 // 1. SISTEMA DE ABAS

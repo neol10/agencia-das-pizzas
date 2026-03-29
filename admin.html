@@ -153,15 +153,12 @@
                                 placeholder="Mensagem da notificacao"></textarea>
                             <input type="url" id="push-url" class="profile-input"
                                 placeholder="URL de destino (opcional)">
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <select id="push-app" class="profile-input" style="max-width: 220px;">
-                                    <option value="all">Todos</option>
-                                    <option value="comanda">Comanda (KDS)</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="site">Site (publico)</option>
-                                </select>
-                                <button id="btn-send-push" class="btn-primary" style="padding: 12px 20px;">
-                                    <i class="ph ph-paper-plane-right"></i> Enviar Push
+                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                <button id="btn-send-push-admin" class="btn-primary" style="padding: 12px 20px;">
+                                    <i class="ph ph-paper-plane-right"></i> Enviar para Admin
+                                </button>
+                                <button id="btn-send-push-client" class="btn-secondary" style="padding: 12px 20px;">
+                                    <i class="ph ph-paper-plane-right"></i> Enviar para Clientes
                                 </button>
                             </div>
                             <p id="push-status" style="font-size: 0.9rem; margin: 0; display: none;"></p>

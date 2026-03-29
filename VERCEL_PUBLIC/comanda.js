@@ -31,8 +31,26 @@ let isInitialLoad = true;
 let realtimeSubscription = null;
 let realtimeHeartbeat = null;
 
+function cleanupLegacyOneSignalSw() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.getRegistrations()
+        .then((regs) => {
+            regs.forEach((reg) => {
+                const urls = [reg.active?.scriptURL, reg.waiting?.scriptURL, reg.installing?.scriptURL].filter(Boolean);
+                if (urls.some((u) => u.includes('OneSignalSDKWorker.js'))) {
+                    reg.pushManager?.getSubscription()
+                        .then((sub) => { if (sub) sub.unsubscribe(); })
+                        .catch(() => { });
+                    reg.unregister();
+                }
+            });
+        })
+        .catch(() => { });
+}
+
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
+    cleanupLegacyOneSignalSw();
     if (window.supabase) {
         dbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         checkSession();
