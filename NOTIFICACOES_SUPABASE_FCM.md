@@ -17,6 +17,9 @@ Se os pedidos nao chegam na Comanda, execute:
 - `orders_public_insert.sql`
 - `customers_public_upsert.sql`
 
+Se aparecer erro de coluna `install_id` no push_tokens_public, execute:
+- `push_tokens_public_fix.sql`
+
 ## 2) Firebase: criar projeto e pegar credenciais
 
 No Firebase Console:

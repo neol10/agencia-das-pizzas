@@ -23,11 +23,13 @@ begin
         'url', '/comanda'
     );
 
-    perform net.http_post(
-        url := 'https://abznheaxvoffclcgqrmm.supabase.co/functions/v1/send-push',
-        headers := jsonb_build_object('content-type', 'application/json'),
-        body := payload::text
-    );
+    if to_regprocedure('net.http_post(text,jsonb,jsonb)') is not null then
+        perform net.http_post(
+            url := 'https://abznheaxvoffclcgqrmm.supabase.co/functions/v1/send-push'::text,
+            headers := jsonb_build_object('content-type', 'application/json'),
+            body := payload::jsonb
+        );
+    end if;
 
     return new;
 end;
