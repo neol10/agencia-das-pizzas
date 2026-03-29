@@ -11,3 +11,10 @@ create policy "Public Insert Orders"
     on public.orders
     for insert
     with check (true);
+
+-- Garante privilegios de INSERT para anon e authenticated
+grant insert on table public.orders to anon;
+grant insert on table public.orders to authenticated;
+
+-- Atualiza cache do PostgREST
+notify pgrst, 'reload schema';
