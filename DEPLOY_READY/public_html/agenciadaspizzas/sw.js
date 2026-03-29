@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neo-cache-v7';
+const CACHE_NAME = 'neo-cache-v8';
 // --- FCM (Firebase Cloud Messaging) - opcional ---
 try {
     importScripts('./firebase-config.js');

@@ -37,7 +37,7 @@ try {
     // Se não tiver config ou não estiver usando FCM, ignora.
 }
 
-const CACHE_NAME = 'neo-cache-v7';
+const CACHE_NAME = 'neo-cache-v8';
 const ASSETS_TO_CACHE = [
     './',
     '/admin',
