@@ -2,6 +2,7 @@
 const supabaseUrl = 'https://abznheaxvoffclcgqrmm.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiem5oZWF4dm9mZmNsY2dxcm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MzE3ODUsImV4cCI6MjA4ODUwNzc4NX0.9Zwi4QTORguSHV4feMoZbr953irktkCnDrY0AHQEaa0';
 const sendPushUrl = `${supabaseUrl}/functions/v1/send-push`;
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiem5oZWF4dm9mZmNsY2dxcm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MzE3ODUsImV4cCI6MjA4ODUwNzc4NX0.9Zwi4QTORguSHV4feMoZbr953irktkCnDrY0AHQEaa0';
 let dbClient = null;
 
 // Elementos Globais
@@ -91,7 +92,11 @@ function initPushControls() {
 
             const res = await fetch(sendPushUrl, {
                 method: 'POST',
-                headers: { 'content-type': 'application/json' },
+                headers: {
+                    'content-type': 'application/json',
+                    apikey: supabaseAnonKey,
+                    Authorization: `Bearer ${supabaseAnonKey}`
+                },
                 body: JSON.stringify(payload)
             });
 
