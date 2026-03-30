@@ -79,6 +79,16 @@ function initPushControls() {
         statusEl.textContent = text;
     };
 
+    async function getAccessToken() {
+        try {
+            if (!dbClient?.auth) return supabaseAnonKey;
+            const { data: { session } } = await dbClient.auth.getSession();
+            return session?.access_token || supabaseAnonKey;
+        } catch {
+            return supabaseAnonKey;
+        }
+    }
+
     async function handleSend(app, targetLabel, btn) {
         const title = inputTitle ? inputTitle.value.trim() : '';
         const body = inputBody ? inputBody.value.trim() : '';
@@ -101,12 +111,13 @@ function initPushControls() {
             const payload = { title, body, app };
             if (url) payload.url = url;
 
+            const accessToken = await getAccessToken();
             const res = await fetch(sendPushUrl, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
                     apikey: supabaseAnonKey,
-                    Authorization: `Bearer ${supabaseAnonKey}`
+                    Authorization: `Bearer ${accessToken}`
                 },
                 body: JSON.stringify(payload)
             });
