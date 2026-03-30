@@ -64,6 +64,9 @@ Você vai precisar setar secrets no Supabase (Project Settings → Edge Function
 ### Edge Function pronta
 Foi adicionada a função: `send-push` em `supabase/functions/send-push/index.ts`.
 
+Obs: o envio manual do admin precisa da Edge Function com `verify_jwt = false`.
+Isso foi adicionado em `supabase/functions/send-push/config.toml`. Refaça o deploy.
+
 **Deploy (via Supabase CLI):**
 - `supabase functions deploy send-push`
 
